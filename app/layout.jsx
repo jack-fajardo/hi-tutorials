@@ -1,6 +1,7 @@
 import { Footer, Layout, Navbar } from 'nextra-theme-docs'
 import { Banner, Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
+import { Analytics } from "@vercel/analytics/next"
 import 'nextra-theme-docs/style.css'
 
 export const metadata = {
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }) {
                 // ... Your additional layout options
                 >
                     {children}
+                    <Analytics />
                 </Layout>
             </body>
         </html>
