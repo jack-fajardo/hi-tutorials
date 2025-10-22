@@ -1,0 +1,581 @@
+***My Java / Spring Boot Journey — Part 1 (Containerized App with Hot Reload)***
+
+**Introduction:**
+
+This post will mainly serve as personal notes where I document my daily learnings throughout my journey into API development with Java.
+
+First of all, I want to make sure I bring over the practices I learned back when I was still doing Node.js development, and keep the mindset of building applications with a strong and reliable infrastructure.
+
+With that in mind, I should think not just like a regular developer, but also with a cloud-oriented mindset — because I believe everything starts with architecture, and a strong foundation is the key to delivering high-quality results.
+
+**Preparation:**
+
+With all that being said, I didn’t jump in right away — I first took the time to plan things out.
+
+I started by listing my goals and decided to focus mainly on the setup first. I’ve been employed in several companies before, and it’s always a headache trying to run an existing backend project on a new machine as a new hire.
+
+Most of the time, the only documentation available is a README file with just two commands to start the app — only to later find out that it doesn’t work on my machine because of missing prerequisites that weren’t mentioned anywhere. Then I’d end up bothering my new co-workers for help when they’re clearly busy.
+
+With that experience in mind, I want to make this app easy to set up right from the start. 
+
+**My App goals are:**
+
+- Build a basic Spring Boot application with a single “Hello World” endpoint ~ starting simple (CRUD app later on).
+- Include necessary dependencies such as a database, and ensure hot-reload is enabled for faster development.
+- Make the project easy to set up and run for anyone — not just myself.
+- If it runs on my machine, it should run on others without issues.
+- Keep the app's folder structure minimal for now
+- Make it future-ready for cloud deployment (e.g., AWS) — with configuration files properly structured from the beginning.
+
+**My personal goals are:**
+
+- Strengthen my OOP knowledge while building this app, since I come from a functional programming background.
+- Understand Java core concepts and the Spring Boot folder structure and layering (controllers, models, services, etc.).
+- Follow and research tutorials along the way.
+- Use AI whenever I have questions or get stuck.
+- Compare Spring Boot and Express.js to identify their similarities and differences in REST API development.
+- Apply modern tools or dependencies if they can speed up development time.
+
+-----
+
+Now that I have goals in mind, I should make them into reality.
+
+**Generating the App:**
+- Since the goal is to make a springboot app, I learned that https://start.spring.io/ is the go-to for everyone who wants to start out. It generates a new springboot app for you easily.
+
+On spring initializr, you can choose which dependencies you want right from the beginning and input your project name:
+
+![spring initializr](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/n0pbawkjyts8ppwih1yl.png)
+
+It generated a project with folder structure as follows:
+
+```
+canspring/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/example/canspring/
+│   │   │       └── CanspringApplication.java
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       ├── static/
+|   |       └── templates/        
+│   └── test/
+│       └── java/
+│           └── com/example/canspring/
+│               └── CanspringApplicationTests.java
+├── .mvn/
+│   └── wrapper/
+│       └── maven-wrapper.properties
+├── pom.xml
+├── mvnw
+├── mvnw.cmd
+├── HELP.md
+├── .gitignore
+└── .gitattributes
+
+```
+
+To actually run this generated app locally, and get a hello world output, people would normally need to install the Java SDK — but I decided not to do that. My goal is to ensure this app runs consistently on any computer, and if someone else has a different version of Java installed, a lot of things could easily fail.
+
+So to proceed,
+
+**Containerizing the App: (Analogy)**
+- Docker is an amazing tool that allows us to package our app and make it portable. This is the solution I chose so the app can be easily set up on any machine — without needing local installations of Java or PostgreSQL. Containerized apps like this can also be smoothly deployed to AWS or any cloud server.
+
+So basically, if I put the Spring Boot app and the database (I chose PostgreSQL) inside containers instead of installing them manually on my computer. Each container acts like a mini-computer that already has everything it needs — correct Java version, correct database, correct settings.
+
+So the goal is if I run the project, Docker starts both and connects them:
+
+App container → runs Spring Boot
+Database container → runs PostgreSQL
+
+No need to install Java or PostgreSQL on my local machine — everything is self-contained. But of course, I needed to download and install Docker Desktop: https://docs.docker.com/desktop/setup/install/windows-install/ and this should be the only thing I need to install moving forward. Nothin more...
+
+**Diagram:**
+```
+┌───────────────────────────────┐
+│        Docker Engine          │
+│   (runs on your computer)     │
+└───────────────────────────────┘
+                │
+   ┌────────────┼───────────────────────────┐
+   │            │                           │
+┌──────────┐  ┌──────────┐   (optional more containers later)
+│ App      │  │ DB       │     
+│ Container│  │ Container│
+│ (Spring  │  │ (Postgre │
+│  Boot)   │  │   SQL)   │
+└──────────┘  └──────────┘
+      │            │
+      └─ connects ─┘  via *internal* Docker network
+
+
+< NO need to install Java or Postgres locally >
+< portable, same setup runs on any computer or cloud >
+```
+
+- I followed this tutorial in installing Docker:
+https://www.youtube.com/watch?v=ZyBBv1JmnWQ
+- Note that Docker Desktop needs either Hyper-V (can be enabled in your computer's bios settings) or WSL2 (if running on a windows machine like me)
+
+**Containerizing the App: (Actual)**
+- Now that I have docker locally installed, I can begin packaging my app. To do this, I need to add 2 files in my generated spring boot project (_Dockerfile and docker-compose.yml_) so Docker can run both the Spring Boot app and PostgreSQL.
+
+```
+canspring/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/example/canspring/
+│   │   │       └── CanspringApplication.java
+│   │   └── resources/
+│   │       ├── application.properties   <- defines connection to database
+│   │       ├── static/
+|   |       └── templates/ 
+│   └── test/
+│       └── java/
+│           └── com/example/canspring/
+│               └── CanspringApplicationTests.java
+├── .mvn/
+│   └── wrapper/
+│       └── maven-wrapper.properties
+├── pom.xml
+├── mvnw
+├── mvnw.cmd
+├── HELP.md
+├── .gitignore
+├── .gitattributes
+├── Dockerfile              ← tells Docker how to build and run this Spring Boot app
+└── docker-compose.yml      ← starts multiple containers together (app + database)
+
+```
+
+Below is the content of my DockerFile:
+
+```
+FROM eclipse-temurin:17-jdk
+
+# Set work directory
+WORKDIR /app
+
+# Copy pom.xml and download dependencies (cached)
+COPY pom.xml .
+COPY mvnw ./
+COPY .mvn .mvn/
+RUN ./mvnw dependency:go-offline
+
+# Copy the entire source code
+COPY src ./src
+
+# Expose port 8080
+EXPOSE 8080
+
+# Run Spring Boot in dev mode (restart + live reload)
+ENTRYPOINT ["./mvnw", "spring-boot:run"]
+
+```
+
+And... below is the content of my docker-compose.yml file:
+
+```
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: canspring
+    ports:
+      - "8080:8080"
+    develop:
+      watch:
+        # Sync source files directly into the container (instant updates)
+        - action: sync+restart
+          path: ./src
+          target: /app/src
+        # If POM changes, rebuild the whole image
+        - action: rebuild
+          path: pom.xml
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: postgresdb
+    restart: always
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+```
+Also need to add some database config to `applicaton.properties`:
+
+```
+spring.application.name=canspring
+spring.datasource.url=jdbc:postgresql://db:5432/mydb
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+# Enable DevTools in Docker
+spring.devtools.restart.enabled=true
+spring.devtools.livereload.enabled=true
+spring.devtools.remote.secret=mysecret
+spring.thymeleaf.cache=false
+```
+
+These docker files should work as config files to package our app and run it. The command I needed to input is:
+`docker-compose up --build`
+- here is the full terminal log: 
+```
+PS C:\Users\Jack\Downloads\canspring> docker-compose up --build
+time="2025-10-22T11:08:32+08:00" level=warning msg="C:\\Users\\Jack\\Downloads\\canspring\\docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+[+] Building 2.5s (15/15) FINISHED
+ => [internal] load local bake definitions                                                                     0.0s
+ => => reading from stdin 520B                                                                                 0.0s
+ => [internal] load build definition from Dockerfile                                                           0.0s
+ => => transferring dockerfile: 423B                                                                           0.0s
+ => [internal] load metadata for docker.io/library/eclipse-temurin:17-jdk                                      1.8s
+ => [auth] library/eclipse-temurin:pull token for registry-1.docker.io                                         0.0s
+ => [internal] load .dockerignore                                                                              0.0s
+ => => transferring context: 2B                                                                                0.0s
+ => [1/7] FROM docker.io/library/eclipse-temurin:17-jdk@sha256:54a16ef91e00c11ac9b05029faa5efd02c37296844204a  0.0s
+ => => resolve docker.io/library/eclipse-temurin:17-jdk@sha256:54a16ef91e00c11ac9b05029faa5efd02c37296844204a  0.0s
+ => [internal] load build context                                                                              0.0s
+ => => transferring context: 1.35kB                                                                            0.0s
+ => CACHED [2/7] WORKDIR /app                                                                                  0.0s
+ => CACHED [3/7] COPY pom.xml .                                                                                0.0s
+ => CACHED [4/7] COPY mvnw ./                                                                                  0.0s
+ => CACHED [5/7] COPY .mvn .mvn/                                                                               0.0s
+ => CACHED [6/7] RUN ./mvnw dependency:go-offline                                                              0.0s
+ => [7/7] COPY src ./src                                                                                       0.1s
+ => exporting to image                                                                                         0.2s
+ => => exporting layers                                                                                        0.1s
+ => => exporting manifest sha256:44333803fb316c5a1afd958c9859e16b005c9fc1cb35140bca23891ff83f7c55              0.0s
+ => => exporting config sha256:2605cb31244d69b6f9a4fc5d689dcb5464acb90e867fda7e03cbb2de8a213659                0.0s
+ => => exporting attestation manifest sha256:94c4a4de744afd58150fd9b401c847335bc217158f440010ad60f5ae686e37c6  0.0s
+ => => exporting manifest list sha256:5a37253c53212b184db420b14b84f39552cb709994b2fa5af7e9697f0bbabcea         0.0s
+ => => naming to docker.io/library/canspring-app:latest                                                        0.0s
+ => => unpacking to docker.io/library/canspring-app:latest                                                     0.0s
+ => resolving provenance for metadata file                                                                     0.0s
+[+] Running 4/4
+ ✔ canspring-app              Built                                                                            0.0s
+ ✔ Network canspring_default  Created                                                                          0.1s
+ ✔ Container postgresdb       Created                                                                          0.1s
+ ✔ Container canspring        Created                                                                          0.1s
+Attaching to canspring, postgresdb
+postgresdb  |
+postgresdb  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+postgresdb  |
+postgresdb  | 2025-10-22 03:08:36.639 UTC [1] LOG:  starting PostgreSQL 15.14 (Debian 15.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+postgresdb  | 2025-10-22 03:08:36.641 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+postgresdb  | 2025-10-22 03:08:36.641 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+postgresdb  | 2025-10-22 03:08:36.646 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postgresdb  | 2025-10-22 03:08:36.660 UTC [29] LOG:  database system was shut down at 2025-10-22 03:05:17 UTC
+postgresdb  | 2025-10-22 03:08:36.687 UTC [1] LOG:  database system is ready to accept connections
+canspring   | [INFO] Scanning for projects...
+canspring   | [INFO]
+canspring   | [INFO] -----------------------< com.example:canspring >------------------------
+canspring   | [INFO] Building canspring 0.0.1-SNAPSHOT
+canspring   | [INFO]   from pom.xml
+canspring   | [INFO] --------------------------------[ jar ]---------------------------------
+canspring   | [INFO]
+canspring   | [INFO] >>> spring-boot:3.5.6:run (default-cli) > test-compile @ canspring >>>
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.15.4/micrometer-observation-1.15.4.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.15.4/micrometer-observation-1.15.4.pom (3.8 kB at 7.6 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.15.4/micrometer-commons-1.15.4.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.15.4/micrometer-commons-1.15.4.pom (3.4 kB at 45 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/jboss/logging/jboss-logging/3.6.1.Final/jboss-logging-3.6.1.Final.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/jboss/logging/jboss-logging/3.6.1.Final/jboss-logging-3.6.1.Final.pom (18 kB at 241 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/jboss/logging/logging-parent/1.0.3.Final/logging-parent-1.0.3.Final.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/jboss/logging/logging-parent/1.0.3.Final/logging-parent-1.0.3.Final.pom (5.7 kB at 78 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/jboss/jboss-parent/42/jboss-parent-42.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/jboss/jboss-parent/42/jboss-parent-42.pom (76 kB at 812 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/classmate/1.7.0/classmate-1.7.0.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/classmate/1.7.0/classmate-1.7.0.pom (7.0 kB at 98 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/oss-parent/56/oss-parent-56.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/oss-parent/56/oss-parent-56.pom (24 kB at 327 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy/1.17.7/byte-buddy-1.17.7.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy/1.17.7/byte-buddy-1.17.7.pom (19 kB at 252 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-parent/1.17.7/byte-buddy-parent-1.17.7.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-parent/1.17.7/byte-buddy-parent-1.17.7.pom (65 kB at 745 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/jakarta/activation/jakarta.activation-api/2.1.4/jakarta.activation-api-2.1.4.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/jakarta/activation/jakarta.activation-api/2.1.4/jakarta.activation-api-2.1.4.pom (19 kB at 247 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-runtime/4.0.5/jaxb-runtime-4.0.5.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-runtime/4.0.5/jaxb-runtime-4.0.5.pom (11 kB at 134 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/mvn/jaxb-runtime-parent/4.0.5/jaxb-runtime-parent-4.0.5.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/mvn/jaxb-runtime-parent/4.0.5/jaxb-runtime-parent-4.0.5.pom (1.2 kB at 15 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/mvn/jaxb-parent/4.0.5/jaxb-parent-4.0.5.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/mvn/jaxb-parent/4.0.5/jaxb-parent-4.0.5.pom (35 kB at 467 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/jaxb-bom-ext/4.0.5/jaxb-bom-ext-4.0.5.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/jaxb-bom-ext/4.0.5/jaxb-bom-ext-4.0.5.pom (3.5 kB at 46 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-core/4.0.5/jaxb-core-4.0.5.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-core/4.0.5/jaxb-core-4.0.5.pom (3.7 kB at 50 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation/2.0.2/angus-activation-2.0.2.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation/2.0.2/angus-activation-2.0.2.pom (4.0 kB at 47 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation-project/2.0.2/angus-activation-project-2.0.2.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation-project/2.0.2/angus-activation-project-2.0.2.pom (21 kB at 282 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/txw2/4.0.5/txw2-4.0.5.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/txw2/4.0.5/txw2-4.0.5.pom (1.8 kB at 24 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/mvn/jaxb-txw-parent/4.0.5/jaxb-txw-parent-4.0.5.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/sun/xml/bind/mvn/jaxb-txw-parent/4.0.5/jaxb-txw-parent-4.0.5.pom (1.2 kB at 17 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-runtime-4.1.2.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-runtime-4.1.2.pom (1.6 kB at 21 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/sun/istack/istack-commons/4.1.2/istack-commons-4.1.2.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/com/sun/istack/istack-commons/4.1.2/istack-commons-4.1.2.pom (26 kB at 333 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.pom (2.2 kB at 26 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-agent/1.17.7/byte-buddy-agent-1.17.7.pom
+Downloaded from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-agent/1.17.7/byte-buddy-agent-1.17.7.pom (14 kB at 184 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/jboss/logging/jboss-logging/3.6.1.Final/jboss-logging-3.6.1.Final.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/org/jboss/logging/jboss-logging/3.6.1.Final/jboss-logging-3.6.1.Final.jar (62 kB at 703 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy/1.17.7/byte-buddy-1.17.7.jar
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-runtime/4.0.5/jaxb-runtime-4.0.5.jar
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-core/4.0.5/jaxb-core-4.0.5.jar
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation/2.0.2/angus-activation-2.0.2.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar (69 kB at 644 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/txw2/4.0.5/txw2-4.0.5.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/txw2/4.0.5/txw2-4.0.5.jar (73 kB at 421 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-runtime-4.1.2.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/org/eclipse/angus/angus-activation/2.0.2/angus-activation-2.0.2.jar (27 kB at 131 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-runtime-4.1.2.jar (26 kB at 107 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.15.4/micrometer-observation-1.15.4.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.15.4/micrometer-observation-1.15.4.jar (75 kB at 226 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.15.4/micrometer-commons-1.15.4.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-runtime/4.0.5/jaxb-runtime-4.0.5.jar (920 kB at 2.3 MB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/jakarta/activation/jakarta.activation-api/2.1.4/jakarta.activation-api-2.1.4.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.15.4/micrometer-commons-1.15.4.jar (49 kB at 113 kB/s)
+canspring   | Downloading from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-agent/1.17.7/byte-buddy-agent-1.17.7.jar
+Downloaded from central: https://repo.maven.apache.org/maven2/jakarta/activation/jakarta.activation-api/2.1.4/jakarta.activation-api-2.1.4.jar (67 kB at 131 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-agent/1.17.7/byte-buddy-agent-1.17.7.jar (366 kB at 616 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/org/glassfish/jaxb/jaxb-core/4.0.5/jaxb-core-4.0.5.jar (139 kB at 219 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/org/aspectj/aspectjweaver/1.9.24/aspectjweaver-1.9.24.jar (2.2 MB at 3.3 MB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy/1.17.7/byte-buddy-1.17.7.jar (9.0 MB at 11 MB/s)
+canspring   | [INFO]
+canspring   | [INFO] --- resources:3.3.1:resources (default-resources) @ canspring ---
+canspring   | [INFO] Copying 1 resource from src/main/resources to target/classes
+canspring   | [INFO] Copying 0 resource from src/main/resources to target/classes
+canspring   | [INFO]
+canspring   | [INFO] --- compiler:3.14.0:compile (default-compile) @ canspring ---
+canspring   | [INFO] Recompiling the module because of changed source code.
+canspring   | [INFO] Compiling 1 source file with javac [debug parameters release 17] to target/classes
+canspring   | [INFO]
+canspring   | [INFO] --- resources:3.3.1:testResources (default-testResources) @ canspring ---
+canspring   | [INFO] skip non existing resourceDirectory /app/src/test/resources
+canspring   | [INFO]
+canspring   | [INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ canspring ---
+canspring   | [INFO] Recompiling the module because of changed dependency.
+canspring   | [INFO] Compiling 1 source file with javac [debug parameters release 17] to target/test-classes
+canspring   | [INFO]
+canspring   | [INFO] <<< spring-boot:3.5.6:run (default-cli) < test-compile @ canspring <<<
+canspring   | [INFO]
+canspring   | [INFO]
+canspring   | [INFO] --- spring-boot:3.5.6:run (default-cli) @ canspring ---
+canspring   | [INFO] Attaching agents: []
+canspring   |
+canspring   |   .   ____          _            __ _ _
+canspring   |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+canspring   | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+canspring   |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+canspring   |   '  |____| .__|_| |_|_| |_\__, | / / / /
+canspring   |  =========|_|==============|___/=/_/_/_/
+canspring   |
+canspring   |  :: Spring Boot ::                (v3.5.6)
+canspring   |
+canspring   | 2025-10-22T03:08:44.466Z  INFO 187 --- [canspring] [  restartedMain] c.e.canspring.CanspringApplication       : Starting CanspringApplication using Java 17.0.16 with PID 187 (/app/target/classes started by root in /app)
+canspring   | 2025-10-22T03:08:44.468Z  INFO 187 --- [canspring] [  restartedMain] c.e.canspring.CanspringApplication       : The following 1 profile is active: "docker"
+canspring   | 2025-10-22T03:08:44.513Z  INFO 187 --- [canspring] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+canspring   | 2025-10-22T03:08:44.514Z  INFO 187 --- [canspring] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+canspring   | 2025-10-22T03:08:44.979Z  INFO 187 --- [canspring] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+canspring   | 2025-10-22T03:08:44.997Z  INFO 187 --- [canspring] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 9 ms. Found 0 JPA repository interfaces.
+canspring   | 2025-10-22T03:08:45.346Z  INFO 187 --- [canspring] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+canspring   | 2025-10-22T03:08:45.357Z  INFO 187 --- [canspring] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+canspring   | 2025-10-22T03:08:45.357Z  INFO 187 --- [canspring] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+canspring   | 2025-10-22T03:08:45.390Z  INFO 187 --- [canspring] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+canspring   | 2025-10-22T03:08:45.391Z  INFO 187 --- [canspring] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 876 ms
+canspring   | 2025-10-22T03:08:45.409Z  WARN 187 --- [canspring] [  restartedMain] .s.b.d.a.RemoteDevToolsAutoConfiguration : Listening for remote restart updates on /.~~spring-boot!~/restart
+canspring   | 2025-10-22T03:08:45.566Z  INFO 187 --- [canspring] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+canspring   | 2025-10-22T03:08:45.638Z  INFO 187 --- [canspring] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
+canspring   | 2025-10-22T03:08:45.676Z  INFO 187 --- [canspring] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+canspring   | 2025-10-22T03:08:45.905Z  INFO 187 --- [canspring] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+canspring   | 2025-10-22T03:08:45.934Z  INFO 187 --- [canspring] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+canspring   | 2025-10-22T03:08:46.101Z  INFO 187 --- [canspring] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1280d447
+canspring   | 2025-10-22T03:08:46.103Z  INFO 187 --- [canspring] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+canspring   | 2025-10-22T03:08:46.194Z  INFO 187 --- [canspring] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+canspring   |   Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+canspring   |   Database driver: undefined/unknown
+canspring   |   Database version: 15.14
+canspring   |   Autocommit mode: undefined/unknown
+canspring   |   Isolation level: undefined/unknown
+canspring   |   Minimum pool size: undefined/unknown
+canspring   |   Maximum pool size: undefined/unknown
+canspring   | 2025-10-22T03:08:46.473Z  INFO 187 --- [canspring] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+canspring   | 2025-10-22T03:08:46.477Z  INFO 187 --- [canspring] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+canspring   | 2025-10-22T03:08:46.513Z  WARN 187 --- [canspring] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+canspring   | 2025-10-22T03:08:46.849Z  INFO 187 --- [canspring] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+canspring   | 2025-10-22T03:08:46.878Z  INFO 187 --- [canspring] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+canspring   | 2025-10-22T03:08:46.887Z  INFO 187 --- [canspring] [  restartedMain] c.e.canspring.CanspringApplication       : Started CanspringApplication in 2.768 seconds (process running for 3.116)
+```
+
+I determined that:
+
+- This shows that application has been built 
+- springboot app has also connected to a postgres database
+- and started on localhost:8080
+
+Next thing is to just create a get endpoint that would return a 'Hello World' text:
+
+I added a controller file in `\canspring\src\main\java\com\example\canspring\controller\HelloController.java` with the following code below
+
+```
+package com.example.canspring.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController {
+
+    // A simple REST endpoint
+    @GetMapping("/hello")
+    public String hello() {
+        return "Hello World!";
+    }
+}
+
+```
+Then tested this on my browser by typing localhost:8080/hello on the URL and it did not work :( it showed me a white label error which means that the endpoint does not exist...
+
+So far I understood that every time there are new files created inside my project, like the controller I just created, I always needed to rebuild the docker image so that those files can be copied by docker...
+
+when I rebuilt my spring boot app using `docker-compose up --build`, the app started... Then I went to localhost:8080/hello again and everything worked!
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/harc9nszn4j0o5c3992l.png)
+
+Then I updated my controller to output a new text: Hello World! with springboot and docker!
+
+I see logs that it detected that there was a change in the controller I updated:
+
+```
+            ⦿ Syncing service "app" after 2 changes were detected
+canspring   | 2025-10-22T04:20:03.491Z  INFO 180 --- [canspring] [ionShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+canspring   | 2025-10-22T04:20:03.497Z  INFO 180 --- [canspring] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+canspring   | 2025-10-22T04:20:03.503Z  INFO 180 --- [canspring] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+canspring   | 2025-10-22T04:20:03.509Z  INFO 180 --- [canspring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+canspring   | 2025-10-22T04:20:03.517Z  INFO 180 --- [canspring] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+            ⦿ service(s) ["app"] restarted
+canspring exited with code 143 (restarting)
+canspring   | [INFO] Scanning for projects...
+canspring   | [INFO]
+canspring   | [INFO] -----------------------< com.example:canspring >------------------------
+canspring   | [INFO] Building canspring 0.0.1-SNAPSHOT
+canspring   | [INFO]   from pom.xml
+canspring   | [INFO] --------------------------------[ jar ]---------------------------------
+canspring   | [INFO]
+canspring   | [INFO] >>> spring-boot:3.5.6:run (default-cli) > test-compile @ canspring >>>
+canspring   | [INFO]
+canspring   | [INFO] --- resources:3.3.1:resources (default-resources) @ canspring ---
+canspring   | [INFO] Copying 1 resource from src/main/resources to target/classes
+canspring   | [INFO] Copying 0 resource from src/main/resources to target/classes
+canspring   | [INFO]
+canspring   | [INFO] --- compiler:3.14.0:compile (default-compile) @ canspring ---
+canspring   | [INFO] Recompiling the module because of changed source code.
+canspring   | [INFO] Compiling 2 source files with javac [debug parameters release 17] to target/classes
+canspring   | [INFO]
+canspring   | [INFO] --- resources:3.3.1:testResources (default-testResources) @ canspring ---
+canspring   | [INFO] skip non existing resourceDirectory /app/src/test/resources
+canspring   | [INFO]
+canspring   | [INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ canspring ---
+canspring   | [INFO] Recompiling the module because of changed dependency.
+canspring   | [INFO] Compiling 1 source file with javac [debug parameters release 17] to target/test-classes
+canspring   | [INFO]
+canspring   | [INFO] <<< spring-boot:3.5.6:run (default-cli) < test-compile @ canspring <<<
+canspring   | [INFO]
+canspring   | [INFO]
+canspring   | [INFO] --- spring-boot:3.5.6:run (default-cli) @ canspring ---
+canspring   | [INFO] Attaching agents: []
+canspring   |
+canspring   |   .   ____          _            __ _ _
+canspring   |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+canspring   | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+canspring   |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+canspring   |   '  |____| .__|_| |_|_| |_\__, | / / / /
+canspring   |  =========|_|==============|___/=/_/_/_/
+canspring   |
+canspring   |  :: Spring Boot ::                (v3.5.6)
+canspring   |
+canspring   | 2025-10-22T04:20:08.785Z  INFO 180 --- [canspring] [  restartedMain] c.e.canspring.CanspringApplication       : Starting CanspringApplication using Java 17.0.16 with PID 180 (/app/target/classes started by root in /app)
+canspring   | 2025-10-22T04:20:08.787Z  INFO 180 --- [canspring] [  restartedMain] c.e.canspring.CanspringApplication       : The following 1 profile is active: "docker"
+canspring   | 2025-10-22T04:20:08.829Z  INFO 180 --- [canspring] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+canspring   | 2025-10-22T04:20:08.829Z  INFO 180 --- [canspring] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+canspring   | 2025-10-22T04:20:09.276Z  INFO 180 --- [canspring] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+canspring   | 2025-10-22T04:20:09.293Z  INFO 180 --- [canspring] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 9 ms. Found 0 JPA repository interfaces.
+canspring   | 2025-10-22T04:20:09.624Z  INFO 180 --- [canspring] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+canspring   | 2025-10-22T04:20:09.635Z  INFO 180 --- [canspring] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+canspring   | 2025-10-22T04:20:09.636Z  INFO 180 --- [canspring] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+canspring   | 2025-10-22T04:20:09.667Z  INFO 180 --- [canspring] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+canspring   | 2025-10-22T04:20:09.669Z  INFO 180 --- [canspring] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 839 ms
+canspring   | 2025-10-22T04:20:09.685Z  WARN 180 --- [canspring] [  restartedMain] .s.b.d.a.RemoteDevToolsAutoConfiguration : Listening for remote restart updates on /.~~spring-boot!~/restart
+canspring   | 2025-10-22T04:20:09.805Z  INFO 180 --- [canspring] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+canspring   | 2025-10-22T04:20:09.843Z  INFO 180 --- [canspring] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
+canspring   | 2025-10-22T04:20:09.868Z  INFO 180 --- [canspring] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+canspring   | 2025-10-22T04:20:10.045Z  INFO 180 --- [canspring] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+canspring   | 2025-10-22T04:20:10.064Z  INFO 180 --- [canspring] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+canspring   | 2025-10-22T04:20:10.176Z  INFO 180 --- [canspring] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7e47f6d5
+canspring   | 2025-10-22T04:20:10.177Z  INFO 180 --- [canspring] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+canspring   | 2025-10-22T04:20:10.235Z  INFO 180 --- [canspring] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+canspring   |   Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+canspring   |   Database driver: undefined/unknown
+canspring   |   Database version: 15.14
+canspring   |   Autocommit mode: undefined/unknown
+canspring   |   Isolation level: undefined/unknown
+canspring   |   Minimum pool size: undefined/unknown
+canspring   |   Maximum pool size: undefined/unknown
+canspring   | 2025-10-22T04:20:10.441Z  INFO 180 --- [canspring] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+canspring   | 2025-10-22T04:20:10.444Z  INFO 180 --- [canspring] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+canspring   | 2025-10-22T04:20:10.478Z  WARN 180 --- [canspring] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+canspring   | 2025-10-22T04:20:10.753Z  INFO 180 --- [canspring] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+canspring   | 2025-10-22T04:20:10.776Z  INFO 180 --- [canspring] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+canspring   | 2025-10-22T04:20:10.785Z  INFO 180 --- [canspring] [  restartedMain] c.e.canspring.CanspringApplication       : Started CanspringApplication in 2.324 seconds (process running for 2.629)
+```
+
+Then I refreshed the browser: and saw that the changes reflected!
+
+![Image description](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/xujwcgucs0b50u6wclhe.png)
+
+***Conclusion:***  
+**In summary for Part 1 of my journey:**
+
+- I was able to build a Spring Boot app that is containerized (easy to setup and run) and currently connected to a local database without JAVA or Postgres installations. It also hot-reloads whenever I make changes to its classes (controller for now).
+
+**Next steps:**  
+- Hot reload should also detect newly added files in the project. Docker should sync those and reflect the changes — not just content changes, but also new files added to a directory.
+- Add new endpoints to build a CRUD app (probably a TODO List app or an Expense Tracker app)
+
+Please input your insights on the comments down below! I would greatly appreciate it! Thank you for learning with me!
+
+
+
+
+
+
+
+
+
+
+
+
