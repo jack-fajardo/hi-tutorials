@@ -87,37 +87,7 @@
 
 ---
 
-## 🧠 9. Reverse a String
-
-| Action | Java | JavaScript |
-|---------|-------|-------------|
-| Reverse string (simple way) | `new StringBuilder("Hello").reverse().toString();` | `"Hello".split("").reverse().join("");` |
-| Manual loop method | ```java
-String reversed = "";
-for (int i = str.length() - 1; i >= 0; i--) {
-    reversed += str.charAt(i);
-}
-``` | ```js
-let reversed = "";
-for (let i = str.length - 1; i >= 0; i--) {
-    reversed += str[i];
-}
-``` |
-
----
-
-## 🧱 10. Convert Between String & Array
-
-| Conversion | Java | JavaScript |
-|-------------|-------|-------------|
-| String → char array | `char[] chars = str.toCharArray();` | `let chars = str.split("");` |
-| Char array → String | `String newStr = new String(chars);` | `let newStr = chars.join("");` |
-| String → byte array | `byte[] bytes = str.getBytes();` | `let bytes = new TextEncoder().encode(str);` |
-| Byte array → String | `String s = new String(bytes);` | `let s = new TextDecoder().decode(bytes);` |
-
----
-
-## 🔠 11. Regex & Pattern Matching
+## 🔠 9. Regex & Pattern Matching
 
 | Action | Java | JavaScript |
 |---------|-------|-------------|
@@ -126,7 +96,7 @@ for (let i = str.length - 1; i >= 0; i--) {
 
 ---
 
-## 🧪 12. Example Comparison
+## 🧪 10. Example Comparison
 
 ```java
 // 🟦 Java
@@ -135,7 +105,3 @@ String result = sentence.trim()
                         .toUpperCase()
                         .replace("AWESOME", "POWERFUL");
 System.out.println(result); // JAVA IS POWERFUL!
-
-// Reverse
-String reversed = new StringBuilder(result).reverse().toString();
-System.out.println(reversed);
