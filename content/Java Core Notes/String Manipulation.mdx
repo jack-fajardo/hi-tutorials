@@ -1,0 +1,107 @@
+# 🧩 Java vs JavaScript String Manipulation Cheat Sheet
+
+---
+
+## 🧱 1. Basic Info
+
+| Concept | Java | JavaScript |
+|----------|------|-------------|
+| Declare a string | `String name = "Jack";` | `let name = "Jack";` |
+| Get length | `int len = name.length();` | `let len = name.length;` |
+| Strings are immutable | ✅ | ✅ |
+
+---
+
+## 🧮 2. Accessing & Combining
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Get character | `char c = name.charAt(0);` | `let c = name.charAt(0);` |
+| Concatenate | `String msg = "Hello " + name;` | `let msg = "Hello " + name;` |
+| Using method | `msg = "Hi".concat(name);` | `msg = "Hi".concat(name);` |
+| Interpolation | `String msg = String.format("Hello %s!", name);` | `` let msg = `Hello ${name}!`; `` |
+
+---
+
+## 🔡 3. Changing Case
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Uppercase | `"hello".toUpperCase();` | `"hello".toUpperCase();` |
+| Lowercase | `"HELLO".toLowerCase();` | `"HELLO".toLowerCase();` |
+
+---
+
+## ✂️ 4. Trimming & Substrings
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Trim spaces | `"  hi  ".trim();` | `"  hi  ".trim();` |
+| Substring | `"abcdef".substring(1, 4); // bcd` | `"abcdef".substring(1, 4); // bcd` |
+| Slice alternative | — | `"abcdef".slice(1, 4); // bcd` |
+
+---
+
+## 🔍 5. Searching
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Contains | `"hello".contains("ell");` | `"hello".includes("ell");` |
+| Starts with | `"hello".startsWith("he");` | `"hello".startsWith("he");` |
+| Ends with | `"hello".endsWith("lo");` | `"hello".endsWith("lo");` |
+| Index of | `"hello".indexOf("e");` | `"hello".indexOf("e");` |
+| Last index of | `"hello".lastIndexOf("l");` | `"hello".lastIndexOf("l");` |
+
+---
+
+## 🧩 6. Comparison
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Equals | `"hi".equals("hi");` | `"hi" === "hi";` |
+| Ignore case | `"Hi".equalsIgnoreCase("hi");` | `"Hi".toLowerCase() === "hi".toLowerCase();` |
+| Compare alphabetically | `"apple".compareTo("banana");` | `"apple".localeCompare("banana");` |
+| Is empty | `"".isEmpty();` | `str.length === 0;` |
+
+---
+
+## 🔁 7. Replacing & Splitting
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Replace first occurrence | `"java".replace("a", "x");` | `"java".replace("a", "x"); // only first` |
+| Replace all occurrences | `"java".replaceAll("a", "x");` | `"java".replaceAll("a", "x"); // ES2021+` |
+| Using regex | `"a1b2".replaceAll("\\d", "-");` | `"a1b2".replace(/\d/g, "-");` |
+| Split string | `"a,b,c".split(",");` | `"a,b,c".split(",");` |
+| Join array (reverse of split) | `String.join("-", list);` | `["a", "b", "c"].join("-");` |
+
+---
+
+## 🔄 8. Building Strings Efficiently
+
+| Task | Java | JavaScript |
+|-------|-------|-------------|
+| Mutable builder | `StringBuilder sb = new StringBuilder(); sb.append("Hi"); sb.append(" there");` | `let str = ""; str += "Hi"; str += " there";` |
+| Convert builder → string | `sb.toString();` | `str;` |
+| Using arrays for performance | — | `["Hi", "there"].join(" ");` |
+
+---
+
+## 🔠 9. Regex & Pattern Matching
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Match pattern | `"abc123".matches("\\d+"); // false` | `/\d+/.test("abc123"); // true` |
+| Extract matches | `Pattern p = Pattern.compile("\\d+"); Matcher m = p.matcher("abc123");` | `"abc123".match(/\d+/); // ["123"]` |
+
+---
+
+## 🧪 10. Example Comparison
+
+```java
+// 🟦 Java
+String sentence = "  Java is Awesome!  ";
+String result = sentence.trim()
+                        .toUpperCase()
+                        .replace("AWESOME", "POWERFUL");
+System.out.println(result); // JAVA IS POWERFUL!
