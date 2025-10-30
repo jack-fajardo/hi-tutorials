@@ -77,6 +77,16 @@
 
 ---
 
+## 🔄 8. Building Strings Efficiently
+
+| Task | Java | JavaScript |
+|-------|-------|-------------|
+| Mutable builder | `StringBuilder sb = new StringBuilder(); sb.append("Hi"); sb.append(" there");` | `let str = ""; str += "Hi"; str += " there";` |
+| Convert builder → string | `sb.toString();` | `str;` |
+| Using arrays for performance | — | `["Hi", "there"].join(" ");` |
+
+---
+
 ## 🧠 9. Reverse a String
 
 | Action | Java | JavaScript |
@@ -107,17 +117,7 @@ for (let i = str.length - 1; i >= 0; i--) {
 
 ---
 
-## 🔄 11. Building Strings Efficiently
-
-| Task | Java | JavaScript |
-|-------|-------|-------------|
-| Mutable builder | `StringBuilder sb = new StringBuilder(); sb.append("Hi"); sb.append(" there");` | `let str = ""; str += "Hi"; str += " there";` |
-| Convert builder → string | `sb.toString();` | `str;` |
-| Using arrays for performance | — | `["Hi", "there"].join(" ");` |
-
----
-
-## 🔠 12. Regex & Pattern Matching
+## 🔠 11. Regex & Pattern Matching
 
 | Action | Java | JavaScript |
 |---------|-------|-------------|
@@ -126,7 +126,7 @@ for (let i = str.length - 1; i >= 0; i--) {
 
 ---
 
-## 🧪 10. Example Comparison
+## 🧪 12. Example Comparison
 
 ```java
 // 🟦 Java
@@ -135,3 +135,7 @@ String result = sentence.trim()
                         .toUpperCase()
                         .replace("AWESOME", "POWERFUL");
 System.out.println(result); // JAVA IS POWERFUL!
+
+// Reverse
+String reversed = new StringBuilder(result).reverse().toString();
+System.out.println(reversed);
