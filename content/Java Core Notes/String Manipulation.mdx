@@ -105,3 +105,43 @@ String result = sentence.trim()
                         .toUpperCase()
                         .replace("AWESOME", "POWERFUL");
 System.out.println(result); // JAVA IS POWERFUL!
+
+
+# 🧱 Java `StringBuilder` vs JavaScript String Operations Cheat Sheet
+
+---
+
+## 🧠 1. Why Use StringBuilder?
+
+| Concept | Java | JavaScript |
+|----------|------|-------------|
+| Mutability | ✅ Mutable (`StringBuilder`) | ⚠️ Strings are immutable |
+| Performance | Faster for repeated concatenations | Use arrays + `.join()` for efficiency |
+| Typical use case | Loops, text generation, building JSON/XML | Dynamic text construction |
+
+---
+
+## 🏗️ 2. Create a StringBuilder
+
+| Action | Java | JavaScript Equivalent |
+|---------|-------|------------------------|
+| Empty builder | `StringBuilder sb = new StringBuilder();` | `let str = "";` |
+| With initial value | `StringBuilder sb = new StringBuilder("Hello");` | `let str = "Hello";` |
+| With capacity | `StringBuilder sb = new StringBuilder(50);` | *(JS auto-handles memory)* |
+
+---
+
+## ✍️ 3. Appending Text
+
+| Action | Java | JavaScript |
+|---------|-------|-------------|
+| Append string | `sb.append(" World");` | `str += " World";` |
+| Append variable | `sb.append(name);` | `str += name;` |
+| Chain multiple appends | `sb.append("Hi ").append(name).append("!");` | `str += "Hi " + name + "!";` |
+
+**Java Example:**
+
+```java
+StringBuilder sb = new StringBuilder("Hello");
+sb.append(" World");
+System.out.println(sb.toString()); // Hello World

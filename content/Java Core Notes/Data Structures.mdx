@@ -1,0 +1,184 @@
+Got it, Jack ⚡ — let’s regenerate the **Java Collections Cheat Sheet** and add the new section on **Replacing Elements** so you have a single, clean, copy‑ready reference.
+
+---
+
+# 📘 Java Collections Cheat Sheet
+
+## 1. **List / ArrayList**
+- **Initialization**
+  ```java
+  List<String> list = new ArrayList<>(); 
+  List<String> list2 = Arrays.asList("A", "B", "C"); 
+  ```
+- **Usage**
+  ```java
+  list.add("Hello");
+  list.get(0); // "Hello"
+  list.remove(0);
+  list.size();
+  ```
+- **Conversion**
+  ```java
+  String[] arr = list.toArray(new String[0]); 
+  List<String> newList = Arrays.asList(arr);
+  ```
+- **Manipulation**
+  ```java
+  Collections.sort(list); 
+  Collections.reverse(list);
+  list.contains("Hello");
+  ```
+
+---
+
+## 2. **HashMap**
+- **Initialization**
+  ```java
+  Map<Integer, String> map = new HashMap<>();
+  ```
+- **Usage**
+  ```java
+  map.put(1, "One");
+  map.get(1); // "One"
+  map.remove(1);
+  map.containsKey(2);
+  map.containsValue("Two");
+  ```
+- **Iteration**
+  ```java
+  for (Map.Entry<Integer, String> entry : map.entrySet()) {
+      System.out.println(entry.getKey() + " = " + entry.getValue());
+  }
+  ```
+- **Conversion**
+  ```java
+  Set<Integer> keys = map.keySet();
+  Collection<String> values = map.values();
+  ```
+
+---
+
+## 3. **Set / HashSet**
+- **Initialization**
+  ```java
+  Set<String> set = new HashSet<>();
+  ```
+- **Usage**
+  ```java
+  set.add("A");
+  set.add("B");
+  set.remove("A");
+  set.contains("B");
+  ```
+- **Conversion**
+  ```java
+  List<String> listFromSet = new ArrayList<>(set);
+  Set<String> setFromList = new HashSet<>(list);
+  ```
+- **Manipulation**
+  ```java
+  set.addAll(Arrays.asList("X", "Y", "Z"));
+  set.clear();
+  ```
+
+---
+
+## 4. **LinkedList**
+- **Initialization**
+  ```java
+  List<String> linkedList = new LinkedList<>();
+  ```
+- **Usage**
+  ```java
+  linkedList.add("First");
+  linkedList.addFirst("Head");
+  linkedList.addLast("Tail");
+  linkedList.removeFirst();
+  linkedList.removeLast();
+  ```
+
+---
+
+## 5. **TreeSet**
+- **Initialization**
+  ```java
+  Set<Integer> treeSet = new TreeSet<>();
+  ```
+- **Usage**
+  ```java
+  treeSet.add(10);
+  treeSet.add(5);
+  treeSet.add(20);
+  // Automatically sorted: [5, 10, 20]
+  ```
+
+---
+
+## 6. **Replacing Elements**
+- **List / ArrayList**
+  ```java
+  List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C"));
+  list.set(1, "X"); // replaces "B" with "X"
+  ```
+- **Search & Replace**
+  ```java
+  int idx = list.indexOf("C");
+  if (idx != -1) {
+      list.set(idx, "Y");
+  }
+  ```
+- **HashMap**
+  ```java
+  map.put(2, "Second"); // replaces value for key 2
+  map.replace(1, "First"); // safer replace
+  map.replace(2, "Second", "TwoTwo"); // conditional replace
+  ```
+- **HashSet**
+  ```java
+  if (set.remove("B")) {
+      set.add("X"); // replace by remove+add
+  }
+  ```
+- **LinkedList**
+  ```java
+  linkedList.set(2, "Z"); // replaces element at index 2
+  ```
+
+---
+
+## ⚡ Quick Conversion Cheats
+| From → To        | Code Example |
+|------------------|--------------|
+| List → Array     | `list.toArray(new String[0])` |
+| Array → List     | `Arrays.asList(arr)` |
+| List → Set       | `new HashSet<>(list)` |
+| Set → List       | `new ArrayList<>(set)` |
+| Map Keys → Set   | `map.keySet()` |
+| Map Values → List| `new ArrayList<>(map.values())` |
+
+---
+
+## 🛠️ Common Manipulations
+- **Sorting**
+  ```java
+  Collections.sort(list);
+  ```
+- **Reverse**
+  ```java
+  Collections.reverse(list);
+  ```
+- **Shuffle**
+  ```java
+  Collections.shuffle(list);
+  ```
+- **Frequency**
+  ```java
+  Collections.frequency(list, "A");
+  ```
+- **Max/Min**
+  ```java
+  Collections.max(list);
+  Collections.min(list);
+  ```
+
+---
