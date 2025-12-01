@@ -1,0 +1,131 @@
+```mdx
+# ✅ Commonly Used Collections in REST APIs
+
+## 📋 List Implementations
+
+### 📌 ArrayList → Most common for JSON arrays
+Example: returning a list of users
+```java
+List<String> users = new ArrayList<>();
+users.add("Alice");
+users.add("Bob");
+```
+
+### 📌 LinkedList → Less common, but useful if you need frequent insertions/removals
+```java
+List<String> users = new LinkedList<>();
+users.add("Alice");
+users.add("Bob");
+```
+
+---
+
+## 🧩 Set Implementations
+
+### 🔒 HashSet → Ensures uniqueness
+Example: tags, roles, permissions
+```java
+Set<String> tags = new HashSet<>();
+tags.add("admin");
+tags.add("editor");
+```
+
+### 🔒 LinkedHashSet → Ensures uniqueness and preserves insertion order
+Useful when order matters in JSON responses
+```java
+Set<String> roles = new LinkedHashSet<>();
+roles.add("USER");
+roles.add("ADMIN");
+```
+
+---
+
+## 🔑 Map Implementations
+
+### 🗂️ HashMap → Most common for JSON objects (key-value pairs)
+```java
+Map<String, String> user = new HashMap<>();
+user.put("id", "101");
+user.put("name", "Alice");
+```
+
+### 🗂️ LinkedHashMap → Preserves insertion order
+Often used by frameworks like Jackson when serializing JSON
+```java
+Map<String, String> user = new LinkedHashMap<>();
+user.put("id", "101");
+user.put("name", "Alice");
+```
+
+### 🗂️ TreeMap → Keeps keys sorted
+Useful if you want ordered keys in your JSON response
+```java
+Map<String, String> capitals = new TreeMap<>();
+capitals.put("Philippines", "Manila");
+capitals.put("Japan", "Tokyo");
+capitals.put("USA", "Washington");
+```
+
+---
+
+## 🚀 Quick Takeaways
+
+- ⚡ ArrayList vs LinkedList → ArrayList is faster for access, LinkedList is better for frequent insert/remove.  
+- ⚡ HashSet vs LinkedHashSet → HashSet ignores duplicates but scrambles order, LinkedHashSet keeps order.  
+- ⚡ HashMap vs LinkedHashMap vs TreeMap → HashMap is fastest, LinkedHashMap keeps insertion order, TreeMap sorts keys.  
+- ⚡ Arrays.asList → you can modify existing elements with `set`, but you cannot change the size (no add/remove).  
+- ⚡ TreeMap always sorts keys.  
+- ⚡ LinkedHashMap preserves insertion order but overwrites duplicate keys.  
+- ⚡ LinkedHashSet preserves insertion order and ignores duplicates.  
+
+---
+
+# 🔑 Common Methods for List (Java)
+
+- `add(element)` → add an element to the list  
+- `get(index)` → retrieve the element at a specific position  
+- `set(index, element)` → replace the element at a specific position  
+- `remove(index)` → remove the element at a specific position  
+- `size()` → return the number of elements in the list  
+- `forEach(action)` → perform an action for each element (loop with lambda)  
+
+---
+
+# 🔑 Common Methods for Map (Java)
+
+- `put(key, value)` → add or update a key-value pair  
+- `get(key)` → retrieve the value associated with a key  
+- `containsKey(key)` → check if the map contains a specific key  
+- `remove(key)` → remove the entry associated with a key  
+- `keySet()` → return all keys in the map  
+- `values()` → return all values in the map  
+- `entrySet()` → return all key-value pairs in the map  
+
+---
+
+# 🌐 Commonly Used Methods for Set (Java)
+
+- `add(element)` → add an element if it’s not already present  
+- `remove(element)` → remove the specified element if it exists  
+- `contains(element)` → check if the set contains the specified element  
+- `size()` → return the number of elements in the set  
+- `clear()` → remove all elements from the set  
+- `isEmpty()` → return true if the set has no elements  
+- `iterator()` → return an iterator to traverse the elements  
+- `addAll(collection)` → add all elements from another collection  
+- `retainAll(collection)` → keep only elements that are also in the specified collection  
+- `removeAll(collection)` → remove all elements that are also in the specified collection  
+
+---
+
+## ⚡ Acronyms for Memorization
+- **ARGS** → List methods  
+- **ARCS** → Set methods  
+- **PGRaVe** → Map methods  
+```
+
+---
+
+This is **one copyable MDX code block** — ready to paste into your project.  
+
+👉 Do you want me to also create a **shorter MDX cheat sheet version** (just acronyms + one‑liners) for quick recall?
